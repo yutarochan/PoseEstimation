@@ -1,0 +1,4 @@
+*.pyc
+.DS_STORE
+
+model/pose_model.pth
