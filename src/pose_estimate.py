@@ -332,7 +332,7 @@ class PoseEstimation:
                 res = l_tree.query(pt)
 
                 l_res = limb_pt_lookup[limb_pt[res[1]]]
-                # print(pt, '\t', limb_pt[res[1]], '\t', l_res)
+                print(pt, '\t', limb_pt[res[1]], '\t', l_res)
 
                 pose_data[l_res[0]]['joint'][l_res[1]] = (pt[0], pt[1], joint_pt_lookup[pt][0])
 
