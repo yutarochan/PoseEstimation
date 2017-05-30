@@ -9,7 +9,6 @@ import torch
 import torch as T
 import numpy as np
 import torch.nn as nn
-import matplotlib.pyplot as plt
 import scipy.ndimage as ndimage
 from torch.autograd import Variable
 import scipy.ndimage.filters as filters

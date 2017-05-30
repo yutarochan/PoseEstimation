@@ -5,9 +5,13 @@ Author: Yuya Jeremy Ong (yjo5006@psu.edu)
 import cv2
 import numpy as np
 import seaborn as sns
-import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter
-matplotlib.use("AGG")
+
+# Handle for No-Display
+try:
+    import matplotlib.pyplot as plt
+except Exception as e:
+    pass
 
 # Plot Properties
 sns.set_style("whitegrid", {'axes.grid' : False})
