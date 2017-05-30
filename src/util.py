@@ -48,10 +48,15 @@ def plot_joint_heatmap(im, hm, index, alpha=0.65):
     plt.imshow(cv2.cvtColor(im, cv2.COLOR_BGR2RGB), alpha=alpha)
     plt.show()
 
-def plot_key_point(im, pk, pts_size=4):
+def plot_all_keypoints(im, pk, pts_size=4):
     pts = [j for i in pk for j in i]
     plt.imshow(cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
     for i in pts: plt.plot(i[0], i[1], 'ro', ms=pts_size)
+    plt.show()
+
+def plot_idx_keypoints(im, pk, index, pts_size=4):
+    plt.imshow(cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
+    for i in pk[index]: plt.plot(i[0], i[1], 'ro', ms=pts_size)
     plt.show()
 
 def plot_paf(im, paf, index, alpha=0.65):
@@ -59,3 +64,7 @@ def plot_paf(im, paf, index, alpha=0.65):
     plt.imshow(paf[index].T, cmap='jet')
     plt.imshow(cv2.cvtColor(im, cv2.COLOR_BGR2RGB), alpha=alpha)
     plt.show()
+
+def plot_person(im, point, limb, index, stick_width):
+    for i in range(17):
+        index = subset[index][np.array()]

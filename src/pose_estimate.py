@@ -31,24 +31,24 @@ class PoseEstimation:
 
     def predict_frame(self, oriImg):
         test_image = Variable(T.transpose(T.transpose(T.unsqueeze(torch.from_numpy(oriImg).float(), 0), 2, 3), 1, 2),volatile=True).cuda()
-        print('Input Image Size: ', test_image.size())
+        # print('Input Image Size: ', test_image.size())
 
         # Multiplier: A pyramid based scaling method to evaluate image from various scales.
         multiplier = [x * self.model_['boxsize'] / oriImg.shape[0] for x in self.param_['scale_search']]
-        print('Image Scaling Multipliers: ', multiplier, '\n')
+        # print('Image Scaling Multipliers: ', multiplier, '\n')
 
         # Heatmap and Parts Affinity Field Data Structures
         heatmap_avg = torch.zeros((len(multiplier),19,oriImg.shape[0], oriImg.shape[1])).cuda()
         paf_avg = torch.zeros((len(multiplier),38,oriImg.shape[0], oriImg.shape[1])).cuda()
 
         # Compute Keypoint and Part Affinity Fields
-        print('Generating Keypoint Heatmap and Parts Affinity Field Predictions...')
+        # print('Generating Keypoint Heatmap and Parts Affinity Field Predictions...')
         for m in range(len(multiplier)):
             # Set Image Scale
             scale = multiplier[m]
             h = int(oriImg.shape[0] * scale)
             w = int(oriImg.shape[1] * scale)
-            print('[', 'Multiplier: ', scale, '-', (w, h), ']')
+            # print('[', 'Multiplier: ', scale, '-', (w, h), ']')
 
             # Pad Image Corresponding to Detection Stride
             pad_h = 0 if (h % self.model_['stride'] == 0) else self.model_['stride'] - (h % self.model_['stride'])
@@ -69,9 +69,9 @@ class PoseEstimation:
             heatmap = nn.UpsamplingBilinear2d((oriImg.shape[0], oriImg.shape[1])).cuda()(output2)
             paf = nn.UpsamplingBilinear2d((oriImg.shape[0], oriImg.shape[1])).cuda()(output1)
 
-            print('Heatmap Dim:', heatmap.size())   # (1, Joint Count, X, Y)
-            print('PAF Dim:', paf.size())           # (1, PAF Count, X, Y)
-            print()
+            # print('Heatmap Dim:', heatmap.size())   # (1, Joint Count, X, Y)
+            # print('PAF Dim:', paf.size())           # (1, PAF Count, X, Y)
+            # print()
 
             heatmap_avg[m] = heatmap[0].data
             paf_avg[m] = paf[0].data
@@ -95,7 +95,7 @@ class PoseEstimation:
         # util.plot_paf(oriImg, paf_avg, 4)
         '''
 
-        # Compute Heapmap Peaks
+        # Compute Heapmap Peaks (Using Non-Maximum Supression Method)
         all_peaks = []
         peak_counter = 0
         for part in range(18):
@@ -140,31 +140,56 @@ class PoseEstimation:
         mapIdx = self.md.get_mapIdx()
         limbSeq = self.md.get_limbseq()
 
+        '''
+        # Find Parts Connection and Cluster to Different Subsets
+        subsets = []
+        candidate = np.array([item for sublist in all_peaks for item in sublist])
+
+        connection = dict()
+
+        for k in range(len(mapIdx))[:1]:
+            print('='*80)
+            print('MAP INDEX: ', mapIdx[k], '\n')
+
+            score_mid = paf_avg[:,:,[x-19 for x in mapIdx[k]]]
+            candA = all_peaks[limbSeq[k][0]-1]
+            candB = all_peaks[limbSeq[k][1]-1]
+
+            print('CANDIDATE A: ', str(candA))
+            print('CANDIDATE B: ', str(candB))
+            print()
+
+            connection[k] = []
+            nA = len(candA)
+            nB = len(candB)
+            indexA, indexB = limbSeq[k]
+
+            # Add Parts to Subset in Special Cases
+            if nA == 0 and nB == 0: continue
+            elif nA == 0:
+                print('Handle Special Case')
+            elif nB == 0:
+                print('Handle Special Case')
+
+            temp = []
+        '''
+
         # Compute Part-Affinity Fields
         connection_all = []
         special_k = []
         mid_num = 10
 
-        print('Computing Parts-Affinity Field (For Head)')
         for k in range(len(mapIdx)):
             score_mid = paf_avg[:,:,[x-19 for x in mapIdx[k]]]
-            print(score_mid.shape)
+            # print(score_mid.shape)
 
             candA = all_peaks[limbSeq[k][0]-1]
             candB = all_peaks[limbSeq[k][1]-1]
-            print('Limb Seq Connection: [', limbSeq[k][0]-1, ',', limbSeq[k][1]-1, ']\n')
+            # print('Limb Seq Connection: [', limbSeq[k][0]-1, ',', limbSeq[k][1]-1, ']\n')
 
             nA = len(candA)
             nB = len(candB)
             indexA, indexB = limbSeq[k]
-
-            print('Candidate A Count: ', nA)
-            print(candA)
-            print()
-
-            print('Candidate B Count: ', nB)
-            print(candB)
-            print()
 
             if nA != 0 and nB != 0:
                 connection_candidate = []
@@ -176,12 +201,12 @@ class PoseEstimation:
                         norm = math.sqrt(vec[0]*vec[0] + vec[1]*vec[1])
                         # Assert: Check if the norm is a not a zero vector.
                         if not np.any(norm):
-                            print('Exception: Norm is a zero-vector')
+                            #print('Exception: Norm is a zero-vector')
                             continue
 
                         # TODO: Save this vector!
                         vec = np.divide(vec, norm)
-                        print('Unit Vector: [',i, ', ', j, ']: ', str(vec))
+                        #print('Unit Vector: [',i, ', ', j, ']: ', str(vec))
 
                         startend = zip(np.linspace(candA[i][0], candB[j][0], num=mid_num), np.linspace(candA[i][1], candB[j][1], num=mid_num))
                         vec_x = np.array([score_mid[int(round(startend[I][1])), int(round(startend[I][0])), 0] for I in range(len(startend))])
@@ -208,9 +233,9 @@ class PoseEstimation:
 
                 connection_all.append(connection)
 
-                print('\nConnections:')
-                print(connection)
-                print()
+                #print('\nConnections:')
+                #print(connection)
+                #print()
             else:
                 # Handle Exception for Potential Missing Part Entities
                 special_k.append(k)
@@ -220,7 +245,7 @@ class PoseEstimation:
         # Use peak finding algorithm again to get the peaks of the PAF and derive a PA Vector
         # !!RETURN_ME!!
 
-        # Build Human Pose Topology
+        # Build Human Pose
         subset = -1 * np.ones((0, 20))
         candidate = np.array([item for sublist in all_peaks for item in sublist])
 
@@ -230,16 +255,71 @@ class PoseEstimation:
                 partBs = connection_all[k][:,1]
                 indexA, indexB = np.array(limbSeq[k]) - 1
 
-                
+                for i in range(len(connection_all[k])):
+                    found = 0
+                    subset_idx = [-1, -1]
 
-        '''
+                    for j in range(len(subset)):
+                        if subset[j][indexA] == partAs[i] or subset[j][indexB] == partBs[i]:
+                            subset_idx[found] = j
+                            found += 1
+
+                    if found == 1:
+                        j = subset_idx[0]
+                        if subset[j][indexB] != partBs[i]:
+                            subset[j][indexB] = partBs[i]
+                            subset[j][-1] += 1
+                            subset[j][-2] += candidate[partBs[i].astype(int), 2] + connection_all[k][i][2]
+                    elif found == 2: # if found 2 and disjoint, merge them
+                        j1, j2 = subset_idx
+                        # print "found = 2"
+                        membership = ((subset[j1]>=0).astype(int) + (subset[j2]>=0).astype(int))[:-2]
+                        if len(np.nonzero(membership == 2)[0]) == 0: #merge
+                            subset[j1][:-2] += (subset[j2][:-2] + 1)
+                            subset[j1][-2:] += subset[j2][-2:]
+                            subset[j1][-2] += connection_all[k][i][2]
+                            subset = np.delete(subset, j2, 0)
+                        else: # as like found == 1
+                            subset[j1][indexB] = partBs[i]
+                            subset[j1][-1] += 1
+                            subset[j1][-2] += candidate[partBs[i].astype(int), 2] + connection_all[k][i][2]
+
+                    # if find no partA in the subset, create a new subset
+                    elif not found and k < 17:
+                        row = -1 * np.ones(20)
+                        row[indexA] = partAs[i]
+                        row[indexB] = partBs[i]
+                        row[-1] = 2
+                        row[-2] = sum(candidate[connection_all[k][i,:2].astype(int), 2]) + connection_all[k][i][2]
+                        subset = np.vstack([subset, row])
+
         # Remove Rows of Subset with the Least Parts Available
-        # FIXME: Apply a threshold parameter or a heuristic for removing the least number of parts.
         deleteIdx = [];
         for i in range(len(subset)):
             if subset[i][-1] < 4 or subset[i][-2]/subset[i][-1] < 0.4:
                 deleteIdx.append(i)
         subset = np.delete(subset, deleteIdx, axis=0)
-        '''
 
         # print('TOTAL PEOPLE DETECTED: ', str(len(subset)))
+
+        # Setup Data Structure for Return
+        # Data Structure: (person, limb seq index, x, y)
+        limb_midpts = []
+        for n in range(len(subset)):
+            for i in range(17):
+                index = subset[n][np.array(limbSeq[i])-1]
+                if -1 in index: continue
+
+                Y = candidate[index.astype(int), 0]
+                X = candidate[index.astype(int), 1]
+
+                mX = np.mean(X)
+                mY = np.mean(Y)
+
+                limb_midpts.append((n, i, mX, mY))
+
+        pose_data = dict()
+        for i in range(subset(i)):
+
+
+        return all_peaks, limb_midpts
