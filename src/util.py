@@ -7,6 +7,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter
+matplotlib.use("AGG")
 
 # Plot Properties
 sns.set_style("whitegrid", {'axes.grid' : False})

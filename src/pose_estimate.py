@@ -14,6 +14,7 @@ import scipy.ndimage as ndimage
 from torch.autograd import Variable
 import scipy.ndimage.filters as filters
 from scipy.ndimage.filters import gaussian_filter
+matplotlib.use("AGG")
 
 import util
 import config
