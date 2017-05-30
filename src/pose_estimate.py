@@ -319,7 +319,7 @@ class PoseEstimation:
                 limb_midpts.append((n, i, mX, mY))
 
         pose_data = dict()
-        for i in range(subset(i)):
+        # for i in range(subset(i)):
 
 
         return all_peaks, limb_midpts
