@@ -8,6 +8,7 @@ import seaborn as sns
 from scipy.ndimage.filters import gaussian_filter
 
 # Handle for No-Display
+# TODO: Enable no - display mode for servers.
 try:
     import matplotlib.pyplot as plt
 except Exception as e:

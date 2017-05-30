@@ -10,10 +10,10 @@ import torch as T
 import numpy as np
 import torch.nn as nn
 import scipy.ndimage as ndimage
+from scipy.spatial import cKDTree
 from torch.autograd import Variable
 import scipy.ndimage.filters as filters
 from scipy.ndimage.filters import gaussian_filter
-matplotlib.use("AGG")
 
 import util
 import config
@@ -98,6 +98,7 @@ class PoseEstimation:
         # Compute Heapmap Peaks (Using Non-Maximum Supression Method)
         all_peaks = []
         peak_counter = 0
+        joint_pt_lookup = dict()
         for part in range(18):
             # Smooth out heapmap with gaussian kernel to remove high frequency variation.
             map_ori = heatmap_avg[:,:,part]
@@ -121,8 +122,15 @@ class PoseEstimation:
             id = range(peak_counter, peak_counter + len(peaks))
             peaks_with_score_and_id = [peaks_with_score[i] + (id[i],) for i in range(len(id))]
 
+            # Create Joint Lookup Dictionary
+            for pt in peaks_with_score_and_id:
+                joint_pt_lookup[(pt[1], pt[0])] = pt[2:4]
+
             all_peaks.append(peaks_with_score_and_id)
             peak_counter += len(peaks)
+
+        # print(joint_pt_lookup)
+        # print()
 
         # TODO: Output Predictions
         # TODO: Plot Keypoint Predictions (Points with Color as Probabilities)
@@ -139,40 +147,6 @@ class PoseEstimation:
         # Load Joint Index and Sequences Data
         mapIdx = self.md.get_mapIdx()
         limbSeq = self.md.get_limbseq()
-
-        '''
-        # Find Parts Connection and Cluster to Different Subsets
-        subsets = []
-        candidate = np.array([item for sublist in all_peaks for item in sublist])
-
-        connection = dict()
-
-        for k in range(len(mapIdx))[:1]:
-            print('='*80)
-            print('MAP INDEX: ', mapIdx[k], '\n')
-
-            score_mid = paf_avg[:,:,[x-19 for x in mapIdx[k]]]
-            candA = all_peaks[limbSeq[k][0]-1]
-            candB = all_peaks[limbSeq[k][1]-1]
-
-            print('CANDIDATE A: ', str(candA))
-            print('CANDIDATE B: ', str(candB))
-            print()
-
-            connection[k] = []
-            nA = len(candA)
-            nB = len(candB)
-            indexA, indexB = limbSeq[k]
-
-            # Add Parts to Subset in Special Cases
-            if nA == 0 and nB == 0: continue
-            elif nA == 0:
-                print('Handle Special Case')
-            elif nB == 0:
-                print('Handle Special Case')
-
-            temp = []
-        '''
 
         # Compute Part-Affinity Fields
         connection_all = []
@@ -304,6 +278,7 @@ class PoseEstimation:
 
         # Setup Data Structure for Return
         # Data Structure: (person, limb seq index, x, y)
+        '''
         limb_midpts = []
         for n in range(len(subset)):
             for i in range(17):
@@ -317,9 +292,48 @@ class PoseEstimation:
                 mY = np.mean(Y)
 
                 limb_midpts.append((n, i, mX, mY))
+        '''
 
-        pose_data = dict()
-        # for i in range(subset(i)):
+        # Setup Pose Dictionary Data Structure for Prediction Return
+        pose_data = []
 
+        # Setup Joint Keypoint to Limb Mapping Structure
+        limb_pt_lookup = dict()
+        limb_pt = []
+        for n in range(len(subset)):
+            p_dict = dict()
+            p_dict['limb'] = []
+            p_dict['joint'] = [None]*18
+            for i in range(17):
+                index = subset[n][np.array(limbSeq[i])-1]
+                if -1 in index:
+                    p_dict['limb'].append(None)
+                    continue
 
-        return all_peaks, limb_midpts
+                Y = candidate[index.astype(int), 0]
+                X = candidate[index.astype(int), 1]
+                mX = int(np.mean(X))
+                mY = int(np.mean(Y))
+
+                limb_pt_lookup[(mX, mY)] = (n, i)
+                limb_pt.append((mX, mY))
+                p_dict['limb'].append((mX, mY))
+
+            pose_data.append(p_dict)
+
+        #print(pose_data)
+
+        # Construct Pose cKDTree to Map Predicted Joint Keypoint to Subset by PAF Vector Endpoints
+        l_tree = cKDTree(limb_pt)
+
+        for i in range(17):
+            for j in range(len(all_peaks[i])):
+                pt = (all_peaks[i][j][1], all_peaks[i][j][0])
+                res = l_tree.query(pt)
+
+                l_res = limb_pt_lookup[limb_pt[res[1]]]
+                # print(pt, '\t', limb_pt[res[1]], '\t', l_res)
+
+                pose_data[l_res[0]]['joint'][l_res[1]] = (pt[0], pt[1], joint_pt_lookup[pt][0])
+
+        return pose_data
