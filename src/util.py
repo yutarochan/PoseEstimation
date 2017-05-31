@@ -14,8 +14,14 @@ try:
 except Exception as e:
     pass
 
+import model
+
 # Plot Properties
 sns.set_style("whitegrid", {'axes.grid' : False})
+
+# Load Model JSON File
+model_file = '../model/pose_model.json'
+m = model.ModelData(model_file)
 
 def padRightDownCorner(img, stride, padValue):
     h = img.shape[0]
@@ -71,6 +77,33 @@ def plot_paf(im, paf, index, alpha=0.65):
     plt.imshow(cv2.cvtColor(im, cv2.COLOR_BGR2RGB), alpha=alpha)
     plt.show()
 
-def plot_person(im, point, limb, index, stick_width):
+def plot_person(im, data, pts_size=5, stick_width=4):
+    # print(data[0])
+
+    for idx, d in enumerate(data[0:1]):
+        # Plot Base Image
+        plt.imshow(cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
+
+        # Plot Joint Keypoints
+        for i in range(17):
+            if d[i]: plt.plot(d[i][0], d[i][1], 'o', ms=pts_size, color=np.array(m.model['colors'][idx])/255)
+
+        # Plot Limbs
+        for i in range(len(m.model['limbSeq'])):
+            idx = (np.array(m.model['limbSeq'][i]) - 1)
+            print(idx)
+            if not d[idx[0]] or not d[idx[1]]: continue
+            print(idx)
+            # X = [d[idx[0]][0], d[idx[1]][0]]
+            # Y = [d[idx[0]][1], d[idx[1]][1]]
+            p1 = d[idx[0]][0:2]
+            p2 = d[idx[1]][0:2]
+            print(p1, p2)
+
+            # plt.plot(X, Y, 'k-')
+            # index = d[i][np.array(m.model['limbSeq'][i])-1]
+    plt.show()
+    '''
     for i in range(17):
         index = subset[index][np.array()]
+    '''

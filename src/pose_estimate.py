@@ -128,21 +128,12 @@ class PoseEstimation:
 
             all_peaks.append(peaks_with_score_and_id)
             peak_counter += len(peaks)
-
-        # print(joint_pt_lookup)
-        # print()
-
-        # TODO: Output Predictions
-        # TODO: Plot Keypoint Predictions (Points with Color as Probabilities)
-        # print('Peak Count: ', peak_counter)
-
-        # print(peaks_with_score) # Return as one of the parameters
-        # !!RETURN_ME!!
-
+            
         '''
         # [Plot KeyPoint (with Probabilities)]
         # util.plot_key_point(oriImg, all_peaks)
         '''
+        # util.plot_all_keypoints(oriImg, all_peaks)
 
         # Load Joint Index and Sequences Data
         mapIdx = self.md.get_mapIdx()
@@ -215,10 +206,6 @@ class PoseEstimation:
                 special_k.append(k)
                 connection_all.append([])
 
-        # TODO: Create a data structure to hold all of the PAF midpoint for each joint connection based on the above derivation.
-        # Use peak finding algorithm again to get the peaks of the PAF and derive a PA Vector
-        # !!RETURN_ME!!
-
         # Build Human Pose
         subset = -1 * np.ones((0, 20))
         candidate = np.array([item for sublist in all_peaks for item in sublist])
@@ -274,66 +261,16 @@ class PoseEstimation:
                 deleteIdx.append(i)
         subset = np.delete(subset, deleteIdx, axis=0)
 
-        # print('TOTAL PEOPLE DETECTED: ', str(len(subset)))
-
-        # Setup Data Structure for Return
-        # Data Structure: (person, limb seq index, x, y)
-        '''
-        limb_midpts = []
-        for n in range(len(subset)):
-            for i in range(17):
-                index = subset[n][np.array(limbSeq[i])-1]
-                if -1 in index: continue
-
-                Y = candidate[index.astype(int), 0]
-                X = candidate[index.astype(int), 1]
-
-                mX = np.mean(X)
-                mY = np.mean(Y)
-
-                limb_midpts.append((n, i, mX, mY))
-        '''
-
         # Setup Pose Dictionary Data Structure for Prediction Return
-        pose_data = []
+        joints_per_skeleton = [[] for i in range(len(subset))]
+    	for n in range(len(subset)):
+    		for i in range(18):
+    			cidx = subset[n][i]
+    			if cidx != -1:
+    				y = candidate[cidx.astype(int), 0]
+    				x = candidate[cidx.astype(int), 1]
+    				joints_per_skeleton[n].append((x, y))
+    			else:
+    				joints_per_skeleton[n].append(None)
 
-        # Setup Joint Keypoint to Limb Mapping Structure
-        limb_pt_lookup = dict()
-        limb_pt = []
-        for n in range(len(subset)):
-            p_dict = dict()
-            p_dict['limb'] = []
-            p_dict['joint'] = [None]*18
-            for i in range(17):
-                index = subset[n][np.array(limbSeq[i])-1]
-                if -1 in index:
-                    p_dict['limb'].append(None)
-                    continue
-
-                Y = candidate[index.astype(int), 0]
-                X = candidate[index.astype(int), 1]
-                mX = int(np.mean(X))
-                mY = int(np.mean(Y))
-
-                limb_pt_lookup[(mX, mY)] = (n, i)
-                limb_pt.append((mX, mY))
-                p_dict['limb'].append((mX, mY))
-
-            pose_data.append(p_dict)
-
-        #print(pose_data)
-
-        # Construct Pose cKDTree to Map Predicted Joint Keypoint to Subset by PAF Vector Endpoints
-        l_tree = cKDTree(limb_pt)
-
-        for i in range(17):
-            for j in range(len(all_peaks[i])):
-                pt = (all_peaks[i][j][1], all_peaks[i][j][0])
-                res = l_tree.query(pt)
-
-                l_res = limb_pt_lookup[limb_pt[res[1]]]
-                print(pt, '\t', limb_pt[res[1]], '\t', l_res)
-
-                pose_data[l_res[0]]['joint'][l_res[1]] = (pt[0], pt[1], joint_pt_lookup[pt][0])
-
-        return pose_data
+        return joints_per_skeleton
