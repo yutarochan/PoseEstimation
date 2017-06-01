@@ -128,7 +128,7 @@ class PoseEstimation:
 
             all_peaks.append(peaks_with_score_and_id)
             peak_counter += len(peaks)
-            
+
         '''
         # [Plot KeyPoint (with Probabilities)]
         # util.plot_key_point(oriImg, all_peaks)
@@ -269,7 +269,7 @@ class PoseEstimation:
     			if cidx != -1:
     				y = candidate[cidx.astype(int), 0]
     				x = candidate[cidx.astype(int), 1]
-    				joints_per_skeleton[n].append((x, y))
+    				joints_per_skeleton[n].append([y, x])
     			else:
     				joints_per_skeleton[n].append(None)
 

@@ -80,7 +80,7 @@ def plot_paf(im, paf, index, alpha=0.65):
 def plot_person(im, data, pts_size=5, stick_width=4):
     # print(data[0])
 
-    for idx, d in enumerate(data[0:1]):
+    for idx, d in enumerate(data):
         # Plot Base Image
         plt.imshow(cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
 
@@ -89,18 +89,18 @@ def plot_person(im, data, pts_size=5, stick_width=4):
             if d[i]: plt.plot(d[i][0], d[i][1], 'o', ms=pts_size, color=np.array(m.model['colors'][idx])/255)
 
         # Plot Limbs
-        for i in range(len(m.model['limbSeq'])):
+        for i in range(len(m.model['limbSeq'][:-2])):
             idx = (np.array(m.model['limbSeq'][i]) - 1)
-            print(idx)
+            # Check if non existant or special cases...
             if not d[idx[0]] or not d[idx[1]]: continue
             print(idx)
-            # X = [d[idx[0]][0], d[idx[1]][0]]
-            # Y = [d[idx[0]][1], d[idx[1]][1]]
+            X = [d[idx[0]][0], d[idx[1]][0]]
+            Y = [d[idx[0]][1], d[idx[1]][1]]
             p1 = d[idx[0]][0:2]
             p2 = d[idx[1]][0:2]
             print(p1, p2)
 
-            # plt.plot(X, Y, 'k-')
+            plt.plot(X, Y, 'k-')
             # index = d[i][np.array(m.model['limbSeq'][i])-1]
     plt.show()
     '''
