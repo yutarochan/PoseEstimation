@@ -35,6 +35,7 @@ im = cv2.imread(im_path)
 util.plot_person(im, data)
 '''
 
+'''
 model = PoseEstimation(model_file, model_weights, config_file)
 
 # Multiframe Test
@@ -55,3 +56,10 @@ def process_frame(frame):
 
 im_files = [f for f in listdir(video_folder) if isfile(join(video_folder, f))]
 for im in im_files: process_frame(im)
+'''
+
+video_folder = '../../../Dataset/PoseTest/test/'
+plot_folder = '../../../Dataset/PoseTest/pose_data/'
+pose_plot =  '../../../Dataset/PoseTest/plot/'
+
+util.plot_sequence(video_folder, plot_folder, pose_plot)
