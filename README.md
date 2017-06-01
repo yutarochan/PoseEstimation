@@ -1,11 +1,7 @@
 ## Real-Time Multi-Person 2D Pose Estimation with Temporal Entity Alignment
 Based on the PyTorch implementation of the pose estimation algorithm, now with
-temporal entity tracking/alignment based on the "Abstraction & Association"
-method proposed by Zhang et. al and a refactored version of the original source
-with algorithm/process annotation.
-
-This pipeline is only built for inference and not for training, but may consider
-the possibility to provide a training interface.
+temporal entity tracking/alignment. This pipeline is only built for inference
+and not for training, but may consider the possibility to provide a training interface.
 
 ### Source Implementations
 * Caffe: https://github.com/ZheC/Realtime_Multi-Person_Pose_Estimation
