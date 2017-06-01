@@ -58,8 +58,13 @@ im_files = [f for f in listdir(video_folder) if isfile(join(video_folder, f))]
 for im in im_files: process_frame(im)
 '''
 
+'''
+# Unifrom Pose Plotting
 video_folder = '../../../Dataset/PoseTest/test/'
 plot_folder = '../../../Dataset/PoseTest/pose_data/'
 pose_plot =  '../../../Dataset/PoseTest/plot/'
 
 util.plot_sequence(video_folder, plot_folder, pose_plot)
+'''
+
+# Pose Mapping
