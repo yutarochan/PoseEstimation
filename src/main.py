@@ -67,4 +67,7 @@ pose_plot =  '../../../Dataset/PoseTest/plot/'
 util.plot_sequence(video_folder, plot_folder, pose_plot)
 '''
 
-# Pose Mapping
+# Pose Filtering
+video_source = ''
+frame_folder = ''
+pose_folder = ''
