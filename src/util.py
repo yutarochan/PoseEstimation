@@ -90,20 +90,20 @@ def plot_person(im, data, pts_size=5, stick_width=4):
         plt.imshow(cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
 
         # Plot Joint Keypoints
-        for i in range(18):
+        for i in range(len(d)):
             if d[i]: plt.plot(d[i][0], d[i][1], 'o', ms=pts_size, color=color[idx])
 
         # Plot Limbs
         for i in range(len(m.model['limbSeq'][:-2])):
             idx = (np.array(m.model['limbSeq'][i]) - 1)
             # Check if non existant or special cases...
-            if not d[idx[0]] or not d[idx[1]]: continue
-            X = [d[idx[0]][0], d[idx[1]][0]]
-            Y = [d[idx[0]][1], d[idx[1]][1]]
-            p1 = d[idx[0]][0:2]
-            p2 = d[idx[1]][0:2]
+            if idx[0] < len(d)-1 and idx[1] < len(d)-1:
+                X = [d[idx[0]][0], d[idx[1]][0]]
+                Y = [d[idx[0]][1], d[idx[1]][1]]
+                p1 = d[idx[0]][0:2]
+                p2 = d[idx[1]][0:2]
 
-            plt.plot(X, Y, 'k-')
+                plt.plot(X, Y, 'k-')
             # index = d[i][np.array(m.model['limbSeq'][i])-1]
     plt.show()
 
