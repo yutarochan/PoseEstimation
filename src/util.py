@@ -135,3 +135,15 @@ def plot_sequence(im_path, pt_path, output, pts_size=5):
                 plt.plot(X, Y, 'k-')
         plt.savefig(output+'/'+out_name+'.jpg')
         plt.clf()
+
+def plot_abs_pose(im, abs_pose, pts_size=5, stick_width=4):
+    plt.imshow(cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
+
+    # Plot Abstract Joint Keypoints
+    for i in range(len(abs_pose)):
+        plt.plot(abs_pose[i][0], abs_pose[i][1], 'o', ms=pts_size)
+
+    # Plot Abstract Joint Limbs
+    abs_limbSeq = [[0, 1], [1, 2], [2, 3], [1, 4], [4, 5], [5, 6]]
+
+    plt.show()
