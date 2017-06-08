@@ -30,14 +30,14 @@ kd_frame  = []      # KD-Tree Pose Tree List
 kp_lookup = []      # Key Point Lookup Dictionary List
 
 ''' FIXME: REFACTORING CODE '''
-for i in range(len(pose))[:2]:
+for i in range(len(pose))[:3]:
     print('FRAME: ', i)
 
     # Load Frame Data
     frame = json.loads(open(pose_dir+'/'+pose[i], 'rb').read())['pose']
 
     # Handle Entity Tracking Cases
-    if len(entities) == 0:                  # No person in previous frame (previous frame was empty)
+    if len(entities) == 0 and len(frame) > 0:   # No person in previous frame (previous frame was empty)
         print('Appending New Entities...')
 
         # Map Pose Dictionary Indicies
@@ -60,11 +60,63 @@ for i in range(len(pose))[:2]:
             kd_frame.append(KDTree(zip(X, Y)))
             kp_lookup.append(lookup)
 
-        pp = pprint.PrettyPrinter()
-        pp.pprint(kp_lookup)
-    elif len(frame) == len(entities):       # Same count as previous frame
+        # pp = pprint.PrettyPrinter()
+        # pp.pprint(kp_lookup)
+
+    elif len(frame) == len(entities):   # Same count as previous frame
         print('No changes in entity counts...')
 
+        # Map Candidate from Previous Frame and Build Lookup Dictionary
+        for x in range(len(frame)):
+            # Query Candidate Joint
+            cand = []
+            for y in range(18):
+                query = kd_frame[x].query(frame[x][y], len(frame))
+                cand.append(zip(query[0], query[1]))
+
+            print('USER: ', x, '\n', cand[0])
+            
+            '''
+            Joint Candidate Structures (cand) - Per Entity Example
+            Step 1:
+            Step 2: (Candidate ID, (Score, Joint ID))
+            '''
+
+            '''
+            # Map Candidate Joint Key Point
+            cand = [(x, (c[0], _id)) for _id, can in enumerate(cand) for c in can]   # Flatten List with Candidate ID Added
+            cand = [(k, map(operator.itemgetter(1), g)) for k, g in itertools.groupby(sorted(cand), key=operator.itemgetter(0))]
+            final = [min(c[1], key=operator.itemgetter(0)) for c in cand]
+
+            print(final)
+
+            lookup = dict()
+            for idx, r in enumerate(final):
+                print( frame[x][idx], '\t', kp_lookup[x][tuple(kd_frame[x].data[r[1]])] )
+            '''
+
+        print()
+            # lookup[tuple(frame[idx][x])] = kp_lookup[0][tuple(kd_frame[0].data[r[1]])]
+
+
+        '''
+        # Build Lookup Mapping for Current Frame
+        curr_lookup = []
+        for x in range(18):
+            lookup = dict()
+            cand = []
+            for y in range(len(frame)):
+                query = kd_frame[y].query(frame[y][x], len(frame))
+                cand.append(zip(query[0], query[1]))
+
+            # Compute Candidate Point Maps
+            cand = [(c[1], (c[0], _id)) for _id, can in enumerate(cand) for c in can]     # Flatten List with Candidate ID Added
+            cand = [(k, map(operator.itemgetter(1), g)) for k, g in itertools.groupby(sorted(cand), key=operator.itemgetter(0))]
+            final = [min(c[1], key=operator.itemgetter(0)) for c in cand]
+
+        # pp = pprint.PrettyPrinter()
+        # pp.pprint(cand[0])
+        '''
 '''
 for i in range(len(pose))[:7]:
     print('FRAME: ', i)
